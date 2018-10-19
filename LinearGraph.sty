@@ -1,8 +1,24 @@
+\RequirePackage{ifthen}
 \RequirePackage{tikz}
 \usetikzlibrary{decorations.markings, patterns, calc, fit}
 
 \newcounter{gSources}
 \newcounter{gGrounds}
+\newcounter{gNormal}
+\newboolean{gNormal}
+\setboolean{gNormal}{false}
+
+\newcommand{\gMaxNormal}{1000}
+
+\newcommand{\gMaxNormals}[1]{
+	\renewcommand{\gMaxNormal}{#1}
+}
+
+\newenvironment{gNormal}{
+	\setboolean{gNormal}{true}
+}{
+	\setboolean{gNormal}{false}
+}
 
 \newcommand{\gSource}[5]{
 	\path [=>, thick, line cap=round, postaction={decorate},
@@ -22,15 +38,31 @@
 				\arrow{>};
 			}}] (#1) to [bend #3] (#2);
 	\end{scope}
+	\ifthenelse{\boolean{gNormal}}{
+		\ifnum\value{gNormal}<\gMaxNormal%
+			\draw[-, yellow, line width=0.3cm, opacity=0.65, line cap=round] (#1.center) to [bend #3] (#2.center);
+		\fi
+		\stepcounter{gNormal}
+	}{}
 	\stepcounter{gSources}
 }
 
-\newcommand{\gBranch}[6][none]{
+\newcommand{\gBranchAP}[7]{
 	\draw [=>, thick, line cap=round, postaction={decorate},
-		decoration={markings, mark=at position 0.5 with {
+		decoration={markings, mark=at position #7 with {
 			\arrow{>};
 			\coordinate (#1);
-		}}] (#2) to [bend #4] node [midway, #5] {#6} (#3);
+		}}] (#2) to [bend #4] node [pos=#7, #5] {#6} (#3);
+	\ifthenelse{\boolean{gNormal}}{
+		\ifnum\value{gNormal}<\gMaxNormal%
+			\draw[-, yellow, line width=0.3cm, opacity=0.65, line cap=round] (#2.center) to [bend #4] (#3.center);
+		\fi
+		\stepcounter{gNormal}
+	}{}
+}
+
+\newcommand{\gBranch}[6][none]{
+	\gBranchAP{#1}{#2}{#3}{#4}{#5}{#6}{0.5}
 }
 
 \newcommand{\gNode}[2]{
@@ -54,6 +86,12 @@
 		}},
 		dash pattern=on \n1 off 0.1cm on 0.1cm off 0.1cm on 0.1cm off 0.1cm on 0.1cm off 0.1cm on 0.1cm off 0.1cm on 0.1cm off 0.1cm on 0.1cm off 0.1cm on 0.1cm off 0.1cm on 0.1cm  off 0.1cm on 0.1cm off 0.1cm on 0.1cm off 0.1cm on 0.1cm off 0.1cm on 0.1cm  off 0.1cm on 0.1cm]
 		(#1) to [bend #3] node [midway, #4] {#5} (#2);
+	\ifthenelse{\boolean{gNormal}}{
+		\ifnum\value{gNormal}<\gMaxNormal%
+			\draw[-, yellow, line width=0.3cm, opacity=0.65, line cap=round] (#1.center) to [bend #3] (#2.center);
+		\fi
+		\stepcounter{gNormal}
+	}{}
 }
 
 \newcommand{\gTF}[2]{
@@ -65,6 +103,7 @@
 }
 
 \newenvironment{LinearGraph}{
+	\setcounter{gNormal}{0}
 	\begin{tikzpicture}
 }{
 	\end{tikzpicture}
